@@ -1,12 +1,15 @@
-import express, {Request, Response} from "express";
+import express from "express";
+
+import dotenv from "dotenv";
+
+dotenv.config(); 
 
 const app = express()
 
+import login from "./controllers/login";
 
-app.get("/", (req:Request, res:Response) =>{
-    res.send("EEEEEEEEEEEEE")
-})
+app.use('/', login)
 
-app.listen(8080, ()=> {
-    console.log("Servidor iniciado: http://localhost:8080")
+app.listen(process.env.PORT, ()=> {
+    console.log(`Servidor iniciado na porta ${process.env.PORT}: http://localhost:${process.env.PORT}`)
 })
