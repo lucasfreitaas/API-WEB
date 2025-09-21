@@ -7,8 +7,11 @@ const express_1 = __importDefault(require("express"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const login_1 = __importDefault(require("./controllers/login"));
-app.use('/', login_1.default);
+app.use(express_1.default.json());
+const AuthConttoller_1 = __importDefault(require("./controllers/AuthConttoller"));
+const SituationController_1 = __importDefault(require("./controllers/SituationController"));
+app.use('/', AuthConttoller_1.default);
+app.use('/', SituationController_1.default);
 app.listen(process.env.PORT, () => {
     console.log(`Servidor iniciado na porta ${process.env.PORT}: http://localhost:${process.env.PORT}`);
 });
