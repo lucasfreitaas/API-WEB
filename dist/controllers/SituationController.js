@@ -15,41 +15,23 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const data_source_1 = require("../data-source");
 const Situations_1 = require("../entity/Situations");
+const PaginationService_1 = require("../services/PaginationService");
 const router = express_1.default.Router();
 router.get("/situations", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    console.log("➡️ Entrou na rota /situations");
     try {
         const situationRepository = data_source_1.AppDataSource.getRepository(Situations_1.Situations);
+        console.log("📦 Repository carregado:", situationRepository.metadata.tableName);
         const page = Number(req.query.page) || 1;
-        const limite = 1;
-        const totalSituations = yield situationRepository.count();
-        if (totalSituations === 0) {
-            res.status(400).json({
-                mensagem: "Nenhuma situação encontrada!",
-            });
-            return;
-        }
-        const lastPage = (totalSituations / limite);
-        if (page > lastPage) {
-            res.status(400).json({
-                mensagem: `Página inválida. O total de páginas é: ${lastPage}`,
-            });
-            return;
-        }
-        const offSet = (page - 1) * limite;
-        const situations = yield situationRepository.find({
-            take: limite,
-            skip: offSet,
-            order: { id: "DESC" }
-        });
-        res.status(200).json({
-            currentPage: page,
-            lastPage,
-            totalSituations,
-            situations,
-        });
+        const limite = Number(req.query.limite) || 10;
+        console.log(`📄 page=${page}, limite=${limite}`);
+        const result = yield PaginationService_1.PaginationService.paginate(situationRepository, page, limite, { id: "DESC" });
+        console.log("✅ Paginate retornou", result);
+        res.status(200).json(result);
         return;
     }
     catch (error) {
+        console.error("❌ Erro na rota /situations:", error);
         res.status(500).json({
             mensagem: "Erro ao listar situações!"
         });

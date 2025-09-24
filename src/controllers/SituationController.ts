@@ -3,59 +3,35 @@ import express, {Request, Response} from "express";
 import { AppDataSource } from "../data-source";
 import { Situations } from "../entity/Situations";
 import { checkPrimeSync } from "crypto";
+import { PaginationService } from "../services/PaginationService";
 
 const router = express.Router();
 
 router.get("/situations", async (req:Request, res:Response) =>{
+    console.log("➡️ Entrou na rota /situations");
     try{ 
         const situationRepository = AppDataSource.getRepository(Situations);
+        console.log("📦 Repository carregado:", situationRepository.metadata.tableName);
 
         const page = Number(req.query.page) || 1;
-        
-        const limite = 1;
+        const limite = Number(req.query.limite) || 10;
 
-        const totalSituations = await situationRepository.count();
+        console.log(`📄 page=${page}, limite=${limite}`);
 
-        if(totalSituations === 0){
-            res.status(400).json({
-                mensagem : "Nenhuma situação encontrada!",
-            });
-            return;
-        }
+        const result = await PaginationService.paginate(situationRepository, page, limite, {id: "DESC"});
+        console.log("✅ Paginate retornou", result);
 
-
-        const lastPage = (totalSituations / limite)
-
-        if(page > lastPage){
-            res.status(400).json({
-                mensagem : `Página inválida. O total de páginas é: ${lastPage}`,
-            });
-            return;
-        }
-
-        const offSet = (page - 1) * limite;
-
-        const situations = await situationRepository.find({
-            take: limite,
-            skip: offSet,
-            order:{id: "DESC"}
-    });
-
-        res.status(200).json({
-            currentPage: page,
-            lastPage,
-            totalSituations,
-            situations,
-        });
-        return
+        res.status(200).json(result);
+        return;
         
     } catch(error){
+        console.error("❌ Erro na rota /situations:", error);
         res.status(500).json({
             mensagem: "Erro ao listar situações!"
         });
-        return
+        return;
     }
-})
+});
 
 router.get("/situations/:id", async (req:Request, res:Response) =>{
     try{
