@@ -19,8 +19,34 @@ const router = express_1.default.Router();
 router.get("/situations", (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const situationRepository = data_source_1.AppDataSource.getRepository(Situations_1.Situations);
-        const situations = yield situationRepository.find();
-        res.status(200).json(situations);
+        const page = Number(req.query.page) || 1;
+        const limite = 1;
+        const totalSituations = yield situationRepository.count();
+        if (totalSituations === 0) {
+            res.status(400).json({
+                mensagem: "Nenhuma situação encontrada!",
+            });
+            return;
+        }
+        const lastPage = (totalSituations / limite);
+        if (page > lastPage) {
+            res.status(400).json({
+                mensagem: `Página inválida. O total de páginas é: ${lastPage}`,
+            });
+            return;
+        }
+        const offSet = (page - 1) * limite;
+        const situations = yield situationRepository.find({
+            take: limite,
+            skip: offSet,
+            order: { id: "DESC" }
+        });
+        res.status(200).json({
+            currentPage: page,
+            lastPage,
+            totalSituations,
+            situations,
+        });
         return;
     }
     catch (error) {
