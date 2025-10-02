@@ -8,7 +8,7 @@ export class ProductCategoria{
   id!: number
 
   @Column({unique: true})
-  nameCategoria!: string;
+  name!: string;
 
   @Column({type: "timestamp", default:() => "CURRENT_TIMESTAMP"})
   createdAt!: Date;
@@ -17,6 +17,5 @@ export class ProductCategoria{
   updatedAt!: Date;
 
   @OneToMany(() => Product, (products) => products.productCategoria)
-  products!: Product []
-
+  products!: Product
 }

@@ -18,11 +18,6 @@ export class CreateProductTable1759348765221 implements MigrationInterface {
                                type: "varchar"
                            },
                            {
-                               name: "email",
-                               type: "varchar",
-                               isUnique: true,
-                           },
-                           {
                                name: "productCategoryId",
                                type: "int",
                            },

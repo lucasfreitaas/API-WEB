@@ -10,8 +10,14 @@ const app = (0, express_1.default)();
 app.use(express_1.default.json());
 const AuthConttoller_1 = __importDefault(require("./controllers/AuthConttoller"));
 const SituationController_1 = __importDefault(require("./controllers/SituationController"));
+const ProductsCategoriaController_1 = __importDefault(require("./controllers/ProductsCategoriaController"));
+const ProductSitutationController_1 = __importDefault(require("./controllers/ProductSitutationController"));
+const ProductsController_1 = __importDefault(require("./controllers/ProductsController"));
 app.use('/', AuthConttoller_1.default);
 app.use('/', SituationController_1.default);
+app.use('/', ProductsCategoriaController_1.default);
+app.use('/', ProductSitutationController_1.default);
+app.use('/', ProductsController_1.default);
 app.listen(process.env.PORT, () => {
     console.log(`Servidor iniciado na porta ${process.env.PORT}: http://localhost:${process.env.PORT}`);
 });

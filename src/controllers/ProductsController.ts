@@ -1,174 +1,148 @@
-//Importar a biblioteca Express
+import { error } from "console";
 import express, {Request, Response} from "express";
 import { AppDataSource } from "../data-source";
-import { Product } from "../entity/Products";
+import { checkPrimeSync } from "crypto";
 import { PaginationService } from "../services/PaginationService";
+import { Product } from "../entity/Products";
 
+const router = express.Router();
 
-//entity products
-// Criar a Aplicação Express
-const router = express.Router()
+router.get("/product", async (req:Request, res:Response) =>{
+    console.log("➡️ Entrou na rota /productproduct");
+    try{ 
+        const productRepository = AppDataSource.getRepository(Product);
+        console.log("📦 Repository carregado:", productRepository.metadata.tableName);
 
-//Criar a LISTA
-router.get("/products", async(req:Request, res:Response)=>{
-  try{
-    const productRepository = AppDataSource.getRepository(Product);
+        const page = Number(req.query.page) || 1;
+        const limite = Number(req.query.limite) || 10;
 
-    const page = Number(req.query.page) || 1;
-  
-    const limit = Number(req.query.limit) || 10;
+        console.log(`📄 page=${page}, limite=${limite}`);
 
-    const result = await PaginationService.paginate(productRepository, page, limit, {id: "DESC"});
+        const result = await PaginationService.paginate(productRepository, page, limite, {id: "DESC"});
+        console.log("✅ Paginate retornou", result);
+
+        res.status(200).json(result);
+        return;
+        
+    } catch(error){
+        console.error("❌ Erro na rota /product:", error);
+        res.status(500).json({
+            mensagem: "Erro ao listar produto!"
+        });
+        return;
+    }
+});
+
+router.get("/product/:id", async (req:Request, res:Response) =>{
+    try{
+
+        const {id} = req.params;
+
+        const productRepository = AppDataSource.getRepository(Product);
+
+        const product = await productRepository.findOneBy({id : parseInt(id)});
+
+        if(!product){
+            res.status(404).json({
+            mensagem: "Produto não encontrado!"
+             });
+            return
+        }
+
+        res.status(200).json(product);
+        return
+
+    } catch(error){
+        res.status(500).json({
+            mensagem: "Erro ao visualizar produto!"
+        });
+        return
+    }
+})
+
+router.post("/product", async(req:Request, res:Response) =>{
     
-    res.status(200).json(result);
+    try{
+        var data = req.body;
 
-    return;
+        const productRepository = AppDataSource.getRepository(Product);
+        const newProduct = productRepository.create(data);
 
-  }catch(error){
-    res.status(500).json({
-      messagem : "Erro ao listar a situação!",
-    });
-    return
-  }
- 
+        await productRepository.save(newProduct);
 
-});
-
-//Criar a visualização do item cadastrado em situação
-router.get("/products/:id", async(req:Request, res:Response)=>{
-  try{
-
-    const { id } = req.params;
-
-    const productRepository = AppDataSource.getRepository(Product);
-
-    const product = await productRepository.findOneBy({id : parseInt(id!)});
-
-    if(!product){
-      res.status(404).json({
-          messagem : "Situação não encontrada!",
+        res.status(201).json({
+            mensagem : "produto cadastrado com sucesso!",
+            Product: newProduct,
         });
-      return
-    }
-
-    res.status(200).json(product);
-    return
-
-  }catch(error){
-    res.status(500).json({
-      messagem : "Erro ao visualizar o produto!",
-    });
-    return
-  }
- 
-
-});
-
-//Criar a rota POST principal
-router.post("/situations", async(req:Request, res:Response)=>{
-  
-  try{
-    var data = req.body;
-
-    const productRepository = AppDataSource.getRepository(Product);
-
-    const newProduct = productRepository.create(data);
-
-    await productRepository.save(newProduct);
-
-    res.status(201).json({
-      messagem : "Situação cadastrada com sucesso!",
-      product : newProduct, 
-    });
-
-  }catch(error){
-
-    res.status(500).json({
-      messagem : "Erro ao cadastrar produto!",
-    });
-
-
-  }
-
-});
-
-//====================
-
-//Atualiza os dados do banco de dados
-router.put("/products/:id", async(req:Request, res:Response)=>{
-  try{
-
-    const { id } = req.params;
-
-    var data = req.body;
-
-    const productRepository = AppDataSource.getRepository(Product);
-
-    const product = await productRepository.findOneBy({id : parseInt(id!)});
-
-    if(!product){
-      res.status(404).json({
-          messagem : "Situação não encontrada!",
+    } catch(error){
+        console.error("❌ Erro ao cadastrar produto:", error);
+        res.status(500).json({
+            mensagem : "Erro ao cadastrar produto!",
         });
-      return
     }
+})
 
-    //Atualiza os dados
-    productRepository.merge(product, data);
+router.put("/product/:id", async (req:Request, res:Response) =>{
+    try{
 
-    //Salvar as alterações de dados
-    const updateProduct = await productRepository.save(product)
+        const {id} = req.params;
 
-    res.status(200).json({
-      messagem : "Produto atualizado com sucesso!",
-      product: updateProduct, 
-    });
+        var data = req.body;
 
-  }catch(error){
-    res.status(500).json({
-      messagem : "Erro ao atualizar o produto!",
-    });
-    return
-  }
- 
+        const productRepository = AppDataSource.getRepository(Product);
 
-});
+        const product = await productRepository.findOneBy({id : parseInt(id)});
 
-//Remove o item cadastrado no banco de dados
-router.delete("/products/:id", async(req:Request, res:Response)=>{
-  try{
+        if(!product){
+            res.status(404).json({
+            mensagem: "produto não encontrada!"
+             });
+            return
+        }
 
-    const { id } = req.params;
+        productRepository.merge(product, data);
 
-    const productRepository = AppDataSource.getRepository(Product);
+        const updateproduct = await productRepository.save(product);
 
-    const product = await productRepository.findOneBy({id : parseInt(id!)});
-
-    if(!product){
-      res.status(404).json({
-          messagem : "Situação não encontrada!",
+        res.status(200).json({
+            mensagem: "produto atualizada com sucesso!",
+            Products: updateproduct,
         });
-      return
+    } catch(error){
+        res.status(500).json({
+            mensagem: "Erro ao atualizar produto!"
+        });
+        return
     }
+})
 
-    //Remover os dados no banco de dados
-    await productRepository.remove(product);
+router.delete("/product/:id", async (req:Request, res:Response) =>{
+    try{
 
-    res.status(200).json({
-      messagem : "Produto foi removido com sucesso!",
-    });
+        const {id} = req.params;
 
-  }catch(error){
-    res.status(500).json({
-      messagem : "Erro ao deletar o produto!",
-    });
-    return
-  }
- 
+        const productRepository = AppDataSource.getRepository(Product);
 
-});
+        const product = await productRepository.findOneBy({id : parseInt(id)});
 
+        if(!product){
+            res.status(404).json({
+            mensagem: "Produto não encontrado!"
+             });
+            return
+        }
 
-//Exportar a instrução da rota
+        await productRepository.remove(product);
+
+        res.status(200).json({
+            mensagem: "produto removido com sucesso!",
+        });
+    } catch(error){
+        res.status(500).json({
+            mensagem: "Erro ao remover produto!"
+        });
+        return
+    }
+})
 
 export default router

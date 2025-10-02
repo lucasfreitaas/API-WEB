@@ -1,5 +1,5 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany, JoinColumn, ManyToMany, ManyToOne } from "typeorm"
-import { ProductCategoria } from "./ProductsCategoria";
+import { ProductCategoria } from "./ProductCategoria";
 import { ProductSituation } from "./ProductSituation";
 
 @Entity("products")
@@ -8,16 +8,15 @@ export class Product{
   id!: number
 
   @Column({unique: true})
-  nameProduct!: string;
+  name!: string;
 
   @ManyToOne(() => ProductCategoria, (productCategoria) => productCategoria.products)
   @JoinColumn({name: "productCategoryId" })
-  productCategoria!: ProductCategoria;
+  productCategoryId!: ProductCategoria;
 
   @ManyToOne(() => ProductSituation, (productSituation) => productSituation.products)
   @JoinColumn({name: "productSituationId"})
-  productSituation!: ProductSituation;
-
+  productSituationId!: ProductSituation;
 
   @Column({type: "timestamp", default:() => "CURRENT_TIMESTAMP"})
   createdAt!: Date;
