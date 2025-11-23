@@ -3,6 +3,7 @@ import express, {Request, Response} from "express";
 import { AppDataSource } from "../data-source";
 import { Situations } from "../entity/Situations";
 import { checkPrimeSync } from "crypto";
+import * as yup from 'yup';
 import { PaginationService } from "../services/PaginationService";
 
 const router = express.Router();
@@ -63,8 +64,15 @@ router.get("/situations/:id", async (req:Request, res:Response) =>{
 router.post("/situations", async(req:Request, res:Response) =>{
     
     try{
-        
         var data = req.body;
+
+        const schema = yup.object().shape({
+            nameSituation: yup.string()
+            .required("O campo nome é obrigatório!")
+            .min(3, "O campo nome deve ter no mínimo 3 caracteres")
+        })
+
+        await schema.validate(data, {abortEarly: false})
 
         const situationRepository = AppDataSource.getRepository(Situations);
         const newSituation = situationRepository.create(data);
@@ -77,6 +85,14 @@ router.post("/situations", async(req:Request, res:Response) =>{
         });
 
     } catch(error){
+
+        if(error instanceof yup.ValidationError){
+            res.status(400).json({
+            mensagem : error.errors
+        });
+        }
+        
+
         res.status(500).json({
             mensagem : "Erro ao cadastrar situação!",
         });
