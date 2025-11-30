@@ -14,13 +14,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const data_source_1 = require("./data-source");
 const CreateSituationsSeeds_1 = __importDefault(require("./seeds/CreateSituationsSeeds"));
+const CreateUsersSeed_1 = __importDefault(require("./seeds/CreateUsersSeed"));
 const runSeeds = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log("Conectando ao banco de dados");
     yield data_source_1.AppDataSource.initialize();
     console.log("Banco de dados conectado");
     try {
         const situationSeeds = new CreateSituationsSeeds_1.default();
+        const userSeed = new CreateUsersSeed_1.default();
         yield situationSeeds.run(data_source_1.AppDataSource);
+        yield userSeed.run(data_source_1.AppDataSource);
     }
     catch (error) {
         console.log("Erro ao conectar o seed:", error);

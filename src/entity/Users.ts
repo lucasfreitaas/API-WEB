@@ -7,7 +7,7 @@ export class User {
     id!: number
 
     @Column()
-    nome!: string
+    name!: string
 
     @Column({unique : true})
     email!: string
@@ -15,10 +15,7 @@ export class User {
     @ManyToOne(() => Situations, (situations) => situations.users)
     @JoinColumn({name: "situationId"})
     situation!: Situations;
-
-    @Column({type: "timestamp", default:() => "CURRENT_TIMESTAMP"})
-    createdAt!: Date
-
+    
     @Column({type: "timestamp", default:() => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP"} )
     updatedAt!: Date
 }

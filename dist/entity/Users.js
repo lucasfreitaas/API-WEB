@@ -22,7 +22,7 @@ __decorate([
 __decorate([
     (0, typeorm_1.Column)(),
     __metadata("design:type", String)
-], User.prototype, "nome", void 0);
+], User.prototype, "name", void 0);
 __decorate([
     (0, typeorm_1.Column)({ unique: true }),
     __metadata("design:type", String)
@@ -32,10 +32,6 @@ __decorate([
     (0, typeorm_1.JoinColumn)({ name: "situationId" }),
     __metadata("design:type", Situations_1.Situations)
 ], User.prototype, "situation", void 0);
-__decorate([
-    (0, typeorm_1.Column)({ type: "timestamp", default: () => "CURRENT_TIMESTAMP" }),
-    __metadata("design:type", Date)
-], User.prototype, "createdAt", void 0);
 __decorate([
     (0, typeorm_1.Column)({ type: "timestamp", default: () => "CURRENT_TIMESTAMP", onUpdate: "CURRENT_TIMESTAMP" }),
     __metadata("design:type", Date)

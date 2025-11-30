@@ -12,12 +12,16 @@ app.use(express_1.default.json());
 app.use((0, cors_1.default)());
 const AuthConttoller_1 = __importDefault(require("./controllers/AuthConttoller"));
 const TestConnectionController_1 = __importDefault(require("./controllers/TestConnectionController"));
+const UsersControllers_1 = __importDefault(require("./controllers/UsersControllers"));
 const SituationController_1 = __importDefault(require("./controllers/SituationController"));
 const ProductsCategoriaController_1 = __importDefault(require("./controllers/ProductsCategoriaController"));
 const ProductSitutationController_1 = __importDefault(require("./controllers/ProductSitutationController"));
 const ProductsController_1 = __importDefault(require("./controllers/ProductsController"));
 app.use('/', TestConnectionController_1.default);
 app.use('/', AuthConttoller_1.default);
+app.use('/', TestConnectionController_1.default);
+app.use('/', AuthConttoller_1.default);
+app.use('/', UsersControllers_1.default);
 app.use('/', SituationController_1.default);
 app.use('/', ProductsCategoriaController_1.default);
 app.use('/', ProductSitutationController_1.default);
@@ -25,3 +29,6 @@ app.use('/', ProductsController_1.default);
 app.listen(process.env.PORT, () => {
     console.log(`Servidor iniciado na porta ${process.env.PORT}: http://localhost:${process.env.PORT}`);
 });
+function __importDefault(arg0) {
+    throw new Error("Function not implemented.");
+}
