@@ -3,8 +3,10 @@ import express, {Request, Response} from "express";
 import { AppDataSource } from "../data-source";
 import { Situations } from "../entity/Situations";
 import { checkPrimeSync } from "crypto";
+import * as yup from 'yup';
 import { PaginationService } from "../services/PaginationService";
 import { ProductCategoria } from "../entity/ProductCategoria";
+import { Not } from "typeorm";
 
 const router = express.Router();
 
@@ -66,7 +68,27 @@ router.post("/productCategoria", async(req:Request, res:Response) =>{
     try{
         var data = req.body;
 
+        const schema = yup.object().shape({
+                            name: yup.string()
+                            .required("O campo nome é obrigatório!")
+                            .min(3, "O campo nome deve ter no mínimo 3 caracteres")
+                        })
+                
+        await schema.validate(data, {abortEarly: false})
+
         const categoriaRepository = AppDataSource.getRepository(ProductCategoria);
+
+        const existingSituation = await categoriaRepository.findOne({
+            where : {name: data.name}
+        })
+
+        if(existingSituation){
+            res.status(400).json({
+                mensagem: "Já existe uma categoria com esse nome!"
+            })
+            return
+        }
+
         const newCategoria= categoriaRepository.create(data);
 
         await categoriaRepository.save(newCategoria);
@@ -76,6 +98,13 @@ router.post("/productCategoria", async(req:Request, res:Response) =>{
             situation: newCategoria,
         });
     } catch(error){
+        if(error instanceof yup.ValidationError){
+                    res.status(400).json({
+                    mensagem : error.errors
+                });
+            return;
+        }
+
         console.error("❌ Erro ao cadastrar categoria:", error);
         res.status(500).json({
             mensagem : "Erro ao cadastrar categoria!",
@@ -91,6 +120,20 @@ router.put("/productCategoria/:id", async (req:Request, res:Response) =>{
         var data = req.body;
 
         const categoriaRepository = AppDataSource.getRepository(ProductCategoria);
+
+        const existingSituation = await categoriaRepository.findOne({
+            where : {
+                name: data.name,
+                id: Not(parseInt(id))
+            }
+        })
+                        
+        if(existingSituation){
+            res.status(400).json({
+            mensagem: "Já existe uma categoria com esse nome!"
+        })
+        return
+        }
 
         const categoria = await categoriaRepository.findOneBy({id : parseInt(id)});
 
@@ -110,6 +153,14 @@ router.put("/productCategoria/:id", async (req:Request, res:Response) =>{
             situations: updateCategoria,
         });
     } catch(error){
+
+        if(error instanceof yup.ValidationError){
+                    res.status(400).json({
+                    mensagem : error.errors
+                });
+            return;
+        }
+
         res.status(500).json({
             mensagem: "Erro ao atualizar categoria!"
         });

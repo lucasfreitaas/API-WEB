@@ -2,8 +2,10 @@ import { error } from "console";
 import express, {Request, Response} from "express";
 import { AppDataSource } from "../data-source";
 import { checkPrimeSync } from "crypto";
+import * as yup from 'yup';
 import { PaginationService } from "../services/PaginationService";
 import { Product } from "../entity/Products";
+import { Not } from "typeorm";
 
 const router = express.Router();
 
@@ -65,7 +67,27 @@ router.post("/product", async(req:Request, res:Response) =>{
     try{
         var data = req.body;
 
+        const schema = yup.object().shape({
+                    name: yup.string()
+                    .required("O campo nome é obrigatório!")
+                    .min(3, "O campo nome deve ter no mínimo 3 caracteres")
+                })
+        
+        await schema.validate(data, {abortEarly: false})
+
         const productRepository = AppDataSource.getRepository(Product);
+
+        const existingSituation = await productRepository.findOne({
+            where : {name: data.name}
+        })
+
+        if(existingSituation){
+            res.status(400).json({
+                mensagem: "Já existe um produto cadastrado com esse nome!"
+            })
+            return
+        }
+
         const newProduct = productRepository.create(data);
 
         await productRepository.save(newProduct);
@@ -75,6 +97,14 @@ router.post("/product", async(req:Request, res:Response) =>{
             Product: newProduct,
         });
     } catch(error){
+
+        if(error instanceof yup.ValidationError){
+                    res.status(400).json({
+                    mensagem : error.errors
+                });
+            return;
+        }
+
         console.error("❌ Erro ao cadastrar produto:", error);
         res.status(500).json({
             mensagem : "Erro ao cadastrar produto!",
@@ -92,6 +122,20 @@ router.put("/product/:id", async (req:Request, res:Response) =>{
         const productRepository = AppDataSource.getRepository(Product);
 
         const product = await productRepository.findOneBy({id : parseInt(id)});
+
+        const existingSituation = await productRepository.findOne({
+                            where : {
+                                name: data.name,
+                                id: Not(parseInt(id))
+                            }
+                        })
+                
+                        if(existingSituation){
+                            res.status(400).json({
+                                mensagem: "Já existe um produto cadastrado com esse nome!"
+                            })
+                            return
+                        }
 
         if(!product){
             res.status(404).json({

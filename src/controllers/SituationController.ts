@@ -5,6 +5,7 @@ import { Situations } from "../entity/Situations";
 import { checkPrimeSync } from "crypto";
 import * as yup from 'yup';
 import { PaginationService } from "../services/PaginationService";
+import { Not } from "typeorm";
 
 const router = express.Router();
 
@@ -75,6 +76,18 @@ router.post("/situations", async(req:Request, res:Response) =>{
         await schema.validate(data, {abortEarly: false})
 
         const situationRepository = AppDataSource.getRepository(Situations);
+
+        const existingSituation = await situationRepository.findOne({
+            where : {nameSituation: data.nameSituation}
+        })
+
+        if(existingSituation){
+            res.status(400).json({
+                mensagem: "Já existe uma situação cadastrada com esse nome!"
+            })
+            return
+        }
+
         const newSituation = situationRepository.create(data);
 
         await situationRepository.save(newSituation);
@@ -90,6 +103,7 @@ router.post("/situations", async(req:Request, res:Response) =>{
             res.status(400).json({
             mensagem : error.errors
         });
+        return;
         }
         
 
@@ -106,9 +120,32 @@ router.put("/situations/:id", async (req:Request, res:Response) =>{
 
         var data = req.body;
 
+        const schema = yup.object().shape({
+            nameSituation: yup.string()
+            .required("O campo nome é obrigatório!")
+            .min(3, "O campo nome deve ter no mínimo 3 caracteres")
+        })
+
+        await schema.validate(data, {abortEarly: false})
+
+
         const situationRepository = AppDataSource.getRepository(Situations);
 
         const situations = await situationRepository.findOneBy({id : parseInt(id)});
+
+        const existingSituation = await situationRepository.findOne({
+            where : {
+                nameSituation: data.nameSituation,
+                id: Not(parseInt(id))
+            }
+        })
+
+        if(existingSituation){
+            res.status(400).json({
+                mensagem: "Já existe uma situação cadastrada com esse nome!"
+            })
+            return
+        }
 
         if(!situations){
             res.status(404).json({
@@ -126,6 +163,13 @@ router.put("/situations/:id", async (req:Request, res:Response) =>{
             situations: updateSituation,
         });
     } catch(error){
+        if(error instanceof yup.ValidationError){
+            res.status(400).json({
+            mensagem : error.errors
+        });
+        return;
+        }
+
         res.status(500).json({
             mensagem: "Erro ao atualizar situação!"
         });
